@@ -1,0 +1,4 @@
+CREATE TABLE players (
+    username TEXT PRIMARY KEY NOT NULL,
+    money DOUBLE PRECISION NOT NULL
+);

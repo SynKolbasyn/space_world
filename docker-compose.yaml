@@ -1,0 +1,26 @@
+version: "3.9"
+
+
+services:
+  space_world:
+    hostname: "space_world"
+    container_name: "space_world"
+    build:
+      dockerfile: "./Dockerfile"
+      args:
+        build_arg: $BUILD_ARG
+    env_file:
+      - "./.env"
+    volumes:
+      - "./build_cache/:/space_world/target/"
+
+  database:
+    hostname: "database"
+    container_name: "database"
+    image: postgres:17
+    env_file:
+      - "./.env"
+    volumes:
+      - "./database/:/var/lib/postgresql/data/"
+    ports:
+      - "${DB_PORT}"
