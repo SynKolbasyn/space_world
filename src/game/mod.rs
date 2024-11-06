@@ -15,6 +15,10 @@
 ///     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
+mod dispatcher;
+pub(crate) mod player;
+
+
 use std::{env::var, sync::Arc};
 
 use anyhow::Result;
@@ -25,10 +29,13 @@ use teloxide::{
     dispatching::UpdateFilterExt,
     prelude::{Dispatcher, Message, Requester, Update, CallbackQuery},
     payloads::SendMessageSetters,
-    types::{InlineKeyboardButton, InlineKeyboardMarkup},
+    types::InlineKeyboardMarkup,
 };
 
-use crate::database::{Database, players_db::Player};
+use crate::{
+    database::Database,
+    game::dispatcher::{process_message, process_callback_query},
+};
 
 
 pub(crate) async fn start_bot() -> Result<()> {
@@ -48,27 +55,16 @@ pub(crate) async fn start_bot() -> Result<()> {
 }
 
 
-async fn message_handler(bot: Bot, msg: Message, database: Arc<RwLock<Database>>) -> Result<()> {
-    match get_username(&msg) {
-        Some(username) => {
-            let mut player: Player = database.write().await.load_player(username).await?;
-            player.money += 10_f64;
-            database.write().await.update_player(&player).await?;
-            bot.send_message(msg.chat.id, format!("Hello, you have {} money", player.money)).reply_markup(InlineKeyboardMarkup::new([[InlineKeyboardButton::callback("Button", "Button")]]))
-        }
-        None => bot.send_message(msg.chat.id, "Couldn't get access to your username"),
-    }.await?;
+async fn message_handler(bot: Bot, message: Message, database: Arc<RwLock<Database>>) -> Result<()> {
+    let (answer, inline_keyboard_markup): (String, InlineKeyboardMarkup) = process_message(&message, database).await?;
+    bot.send_message(message.chat.id, answer).reply_markup(inline_keyboard_markup).await?;
     Ok(())
 }
 
 
-async fn callback_query_handler(bot: Bot, q: CallbackQuery) -> Result<()> {
-    bot.answer_callback_query(q.id).await?;
-    bot.send_message(q.from.id, "Hello").reply_markup(InlineKeyboardMarkup::new([[InlineKeyboardButton::callback("Button", "Button")]])).await?;
+async fn callback_query_handler(bot: Bot, callback_query: CallbackQuery, database: Arc<RwLock<Database>>) -> Result<()> {
+    let (answer, inline_keyboard_markup): (String, InlineKeyboardMarkup) = process_callback_query(&callback_query, database).await?;
+    bot.answer_callback_query(callback_query.id).await?;
+    bot.send_message(callback_query.from.id, answer).reply_markup(inline_keyboard_markup).await?;
     Ok(())
-}
-
-
-fn get_username(message: &Message) -> Option<String> {
-    Some(message.from.clone()?.username?)
 }

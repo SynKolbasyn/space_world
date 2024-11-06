@@ -20,13 +20,15 @@ pub(crate) mod players_db;
 
 use std::env::var;
 
-use diesel::{insert_into, update, Connection, PgConnection, QueryDsl};
 use anyhow::{Context, Result};
+use diesel::{insert_into, update, Connection, OptionalExtension, PgConnection, QueryDsl, SelectableHelper};
 use diesel_async::{AsyncConnection, AsyncPgConnection, RunQueryDsl};
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 
-use crate::database::players_db::{Player, players};
-
+use crate::{
+    database::players_db::players,
+    game::player::Player,
+};
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
 
@@ -63,20 +65,14 @@ impl Database {
     }
 
 
-    pub(crate) async fn load_player(&mut self, username: String) -> Result<Player> {
-        let player: Player = Player::create(username);
-        Ok(match players::table.find(&player.username).first::<Player>(&mut self.connection).await {
-            Ok(player) => player,
-            Err(_) => {
-                self.add_player(&player).await?;
-                player
-            }
-        })
+    pub(crate) async fn load_player<T: ToString>(&mut self, username: T) -> Result<Option<Player>> {
+        let data_table: Option<Player> = players::table.find(username.to_string()).select(Player::as_select()).first(&mut self.connection).await.optional()?;
+        Ok(data_table)
     }
-    
-    
-    pub(crate) async fn update_player(&mut self, player: &Player) -> Result<()> {
-        update(players::table.find(&player.username)).set(player).execute(&mut self.connection).await?;
+
+
+    pub(crate) async fn update_player(&mut self, player: Player) -> Result<()> {
+        update(players::table.find(player.username())).set(player).execute(&mut self.connection).await?;
         Ok(())
     }
 }

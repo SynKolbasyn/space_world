@@ -11,8 +11,6 @@ services:
         build_arg: $BUILD_ARG
     env_file:
       - "./.env"
-    volumes:
-      - "./build_cache/:/space_world/target/"
 
   database:
     hostname: "database"

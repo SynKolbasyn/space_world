@@ -15,35 +15,27 @@
 ///     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-use diesel::prelude::*;
+use diesel::table;
 
 
 table! {
     players (username) {
         username -> Text,
         money -> Double,
-    }
-}
 
-
-#[derive(Queryable, Selectable, Insertable, AsChangeset)]
-#[diesel(table_name = players)]
-pub(crate) struct Player {
-    pub(crate) username: String,
-    pub(crate) money: f64,
-}
-
-
-impl Player {
-    fn new(username: String, money: f64) -> Self {
-        Self {
-            username,
-            money,
-        }
-    }
-    
-    
-    pub(crate) fn create<U: Into<String>>(username: U) -> Self {
-        Self::new(username.into(), 0_f64)
+        system -> Text,
+        location -> Text,
+        service -> Nullable<Text>,
+        
+        ship -> Text,
+        weapon_1 -> Nullable<Text>,
+        weapon_2 -> Nullable<Text>,
+        weapon_3 -> Nullable<Text>,
+        device_1 -> Nullable<Text>,
+        device_2 -> Nullable<Text>,
+        device_3 -> Nullable<Text>,
+        component_1 -> Nullable<Text>,
+        component_2 -> Nullable<Text>,
+        component_3 -> Nullable<Text>,
     }
 }
