@@ -1,0 +1,22 @@
+name: "build & test"
+
+
+on: ["push", "pull_request"]
+
+
+env:
+  CARGO_TERM_COLOR: "always"
+
+
+jobs:
+  build_and_test:
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - uses: "actions/checkout@v4"
+
+      - name: "build"
+        run: "cargo build --verbose"
+      
+      - name: "test"
+        run: "cargo test --verbose"
