@@ -39,6 +39,7 @@ use crate::{
 
 
 pub(crate) async fn start_bot() -> Result<()> {
+    log::info!("Starting bot...");
     let token: String = var("BOT_TOKEN")?;
     let bot: Bot = Bot::new(token);
     let database: Arc<RwLock<Database>> = Arc::new(RwLock::new(Database::create().await?));
@@ -56,7 +57,7 @@ pub(crate) async fn start_bot() -> Result<()> {
 
 
 async fn message_handler(bot: Bot, message: Message, database: Arc<RwLock<Database>>) -> Result<()> {
-    let (answer, inline_keyboard_markup): (String, InlineKeyboardMarkup) = process_message(&message, database).await?;
+    let (answer, inline_keyboard_markup): (String, InlineKeyboardMarkup) = process_message(&message, database).await.unwrap_or_else(|e| {log::error!("{e}"); (e.to_string(), InlineKeyboardMarkup::default())});
     bot.send_message(message.chat.id, answer).reply_markup(inline_keyboard_markup).await?;
     Ok(())
 }

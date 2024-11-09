@@ -26,6 +26,7 @@ use crate::game::start_bot;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    pretty_env_logger::init();
     start_bot().await?;
     Ok(())
 }

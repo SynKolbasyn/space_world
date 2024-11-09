@@ -110,8 +110,7 @@ impl Player {
 
 
     pub(crate) fn process_action(&mut self, action: String) -> Result<(String, Vec<String>)> {
-        println!("{action}");
-        self.money += random::<f64>() / f64::MAX;
+        self.money += random::<f64>();
         Ok((format!("Your money is {}", self.money), vec!["Button".to_string()]))
     }
 

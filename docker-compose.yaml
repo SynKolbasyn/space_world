@@ -1,6 +1,3 @@
-version: "3.9"
-
-
 services:
   space_world:
     hostname: "space_world"

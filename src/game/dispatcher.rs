@@ -36,11 +36,12 @@ async fn process_player(username: String, action: String, database: Arc<RwLock<D
 
 
 async fn load_player(username: String, database: Arc<RwLock<Database>>) -> Result<Player> {
-    Ok(match database.write().await.load_player(&username).await? {
+    let mut db = database.write().await;
+    Ok(match db.load_player(&username).await? {
         Some(player) => player,
         None => {
             let player: Player = Player::create(username);
-            database.write().await.add_player(&player).await?;
+            db.add_player(&player).await?;
             player
         },
     })
